@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const sendVerificationEmail = require("../utils/sendVerificationEmail");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const otpSchema = new mongoose.Schema({
   email: {
