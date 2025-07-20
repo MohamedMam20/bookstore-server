@@ -4,10 +4,10 @@
   "description": "online book store server side",
   "main": "index.js",
   "scripts": {
-    "start": "npm run build && node dist/index.js",
-    "dev": "nodemon index.js",
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npm run build && node dist/bundle.js",
+    "dev": "nodemon src/index.js",
+    "build": "esbuild src/index.js --bundle --platform=node --outfile=dist/bundle.js"
   },
   "author": "",
   "license": "ISC",
