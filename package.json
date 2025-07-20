@@ -1,13 +1,14 @@
+
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "online book store server side ",
+  "description": "online book store server side",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node dist/index.js",
+    "start": "npm run build && node dist/index.js",
     "dev": "nodemon index.js",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
@@ -22,7 +23,6 @@
     "cloudinary": "^2.7.0",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
-    "cros": "^1.1.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "express-validator": "^7.2.1",
@@ -32,7 +32,6 @@
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.1",
     "multer": "^2.0.1",
-    "ngx-toastr": "^19.0.0",
     "node-cache": "^5.1.2",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.3",
@@ -52,6 +51,6 @@
     "nodemon": "^3.1.10"
   },
   "engines": {
-    "node": ">=10.0.0"
+    "node": ">=18.0.0"
   }
 }
