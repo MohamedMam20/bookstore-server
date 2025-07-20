@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const { validationResult } = require("express-validator");
 const User = require("../models/usersModel");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const OTP = require("../models/otpModel");
 const otpGenerator = require("otp-generator");
@@ -319,13 +319,12 @@ const googleLogin = async (req, res) => {
       });
     }
 
- const tokenRes = generateAccessToken({
-  id: user._id,
-  name: `${user.firstName} ${user.lastName}`.trim(),
-  email: user.email,
-  role: user.role,
-});
-
+    const tokenRes = generateAccessToken({
+      id: user._id,
+      name: `${user.firstName} ${user.lastName}`.trim(),
+      email: user.email,
+      role: user.role,
+    });
 
     res.status(200).json({
       success: true,
