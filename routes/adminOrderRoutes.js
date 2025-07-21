@@ -1,77 +1,66 @@
-// routes/orderRoutes.js
 const express = require("express");
 const router = express.Router();
 const orderController = require("../controllers/orderController");
 const { verifyToken } = require("../middlewares/verifyToken");
 const { admin } = require("../middlewares/admin");
 
+// Admin order routes - all protected by verifyToken and admin middleware
+router.get("/", verifyToken, admin, orderController.getAllOrders);
+router.get("/recent", verifyToken, admin, orderController.getRecentOrders);
+router.get("/:id", verifyToken, admin, orderController.getOrderById);
+router.patch("/:id", verifyToken, admin, orderController.updateOrderStatus);
+router.delete("/:id", verifyToken, admin, orderController.deleteOrder);
+
+module.exports = router;
+
+
 /**
  * @swagger
  * tags:
- *   name: Orders
- *   description: API endpoints for managing orders (Admin protected)
+ *   name: Admin Orders
+ *   description: Order management endpoints for administrators
  */
 
 /**
  * @swagger
- * /orders:
+ * /admin/orders:
  *   get:
- *     summary: Get all orders (Admin)
- *     tags: [Orders]
+ *     summary: Get all orders
+ *     tags: [Admin Orders]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *         description: Page number for pagination (default 1)
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Number of items per page (default 10)
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *         description: Filter by order status
  *     responses:
  *       200:
- *         description: A list of orders
+ *         description: List of all orders
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
  */
-router.get("/", verifyToken, admin, orderController.getAllOrders);
 
 /**
  * @swagger
- * /orders/recent:
+ * /admin/orders/recent:
  *   get:
- *     summary: Get recent orders (Admin)
- *     tags: [Orders]
+ *     summary: Get recent orders
+ *     tags: [Admin Orders]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Number of recent orders (default 5)
  *     responses:
  *       200:
- *         description: A list of recent orders
+ *         description: List of recent orders
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
  */
-router.get("/recent", verifyToken, admin, orderController.getRecentOrders);
 
 /**
  * @swagger
- * /orders/{id}:
+ * /admin/orders/{id}:
  *   get:
- *     summary: Get order by ID (Admin)
- *     tags: [Orders]
+ *     summary: Get order by ID
+ *     tags: [Admin Orders]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -80,21 +69,19 @@ router.get("/recent", verifyToken, admin, orderController.getRecentOrders);
  *         required: true
  *         schema:
  *           type: string
- *         description: Order ID
  *     responses:
  *       200:
  *         description: Order details
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
  *       404:
  *         description: Order not found
- */
-router.get("/:id", verifyToken, admin, orderController.getOrderById);
-
-/**
- * @swagger
- * /orders/{id}:
+ *
  *   patch:
- *     summary: Update order status (Admin)
- *     tags: [Orders]
+ *     summary: Update order status
+ *     tags: [Admin Orders]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -103,7 +90,6 @@ router.get("/:id", verifyToken, admin, orderController.getOrderById);
  *         required: true
  *         schema:
  *           type: string
- *         description: Order ID
  *     requestBody:
  *       required: true
  *       content:
@@ -113,23 +99,20 @@ router.get("/:id", verifyToken, admin, orderController.getOrderById);
  *             properties:
  *               status:
  *                 type: string
- *                 example: "shipped"
+ *                 enum: [pending, processing, shipped, delivered, cancelled]
  *     responses:
  *       200:
  *         description: Order status updated
- *       400:
- *         description: Invalid status or missing field
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
  *       404:
  *         description: Order not found
- */
-router.patch("/:id", verifyToken, admin, orderController.updateOrderStatus);
-
-/**
- * @swagger
- * /orders/{id}:
+ *
  *   delete:
- *     summary: Delete order (Admin)
- *     tags: [Orders]
+ *     summary: Delete order
+ *     tags: [Admin Orders]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -138,13 +121,13 @@ router.patch("/:id", verifyToken, admin, orderController.updateOrderStatus);
  *         required: true
  *         schema:
  *           type: string
- *         description: Order ID
  *     responses:
  *       200:
- *         description: Order deleted successfully
+ *         description: Order deleted
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
  *       404:
  *         description: Order not found
  */
-router.delete("/:id", verifyToken, admin, orderController.deleteOrder);
-
-module.exports = router;
