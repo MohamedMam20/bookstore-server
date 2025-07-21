@@ -63,7 +63,10 @@ app.use(morgan("dev"));
 
 app.use(
   cors({
-    origin: ["http://localhost:4200"],
+    origin: [
+      "http://localhost:4200",
+      "https://book-store-client-ten-alpha.vercel.app",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
