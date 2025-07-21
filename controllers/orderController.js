@@ -6,18 +6,15 @@ const User = require("../models/usersModel");
 const OrderConfirmationEmail = require("../utils/orderConfirmationEmail");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY); // Add this at the top with other imports
 
-
 const placeOrder = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
     const userEmail = req.user.email;
     //Log user email
-    console.log("User email:", userEmail);
+    //console.log("User email:", userEmail);
     const user = await User.findOne({ email: userEmail });
     if (!user) {
-      
-
       await session.abortTransaction();
       return res.status(404).json({
         status: "Failure",
@@ -27,8 +24,6 @@ const placeOrder = async (req, res) => {
 
     const cartItems = await CartItem.find({ user: user._id }).populate("book");
     if (cartItems.length === 0) {
-
-
       await session.abortTransaction();
       return res.status(400).json({
         status: "Failure",
@@ -42,9 +37,7 @@ const placeOrder = async (req, res) => {
     for (const item of cartItems) {
       const { book, quantity, language } = item;
 
-
       const stock = book.stock?.[language];
-
 
       if (stock === undefined) {
         await session.abortTransaction();
@@ -54,7 +47,6 @@ const placeOrder = async (req, res) => {
         });
       }
 
-
       if (quantity > stock) {
         await session.abortTransaction();
         return res.status(400).json({
@@ -62,7 +54,6 @@ const placeOrder = async (req, res) => {
           message: `Only ${stock} left in stock for ${book.title}`,
         });
       }
-
 
       book.stock[language] -= quantity;
       await book.save({ session });
@@ -75,14 +66,13 @@ const placeOrder = async (req, res) => {
       });
     }
 
-
     const newOrder = await Order.create(
       [
         {
           user: user._id,
           books: orderBooks,
           totalPrice,
-          paymentMethod: 'paypal',
+          paymentMethod: "paypal",
         },
       ],
       { session }
@@ -92,12 +82,9 @@ const placeOrder = async (req, res) => {
 
     await session.commitTransaction();
 
-
     // await OrderConfirmationEmail(user.email, user.firstName, newOrder[0]._id, totalPrice);
     const orderedBooks = cartItems.map((item) => ({
- 
-
- title: item.book.title,
+      title: item.book.title,
       quantity: item.quantity,
     }));
 
@@ -109,31 +96,30 @@ const placeOrder = async (req, res) => {
       orderedBooks
     );
 
-//notification to the admin using WebSocket
-// Add this to the createOrder function or wherever orders are created
-const io = req.app.locals.io;
-console.log("🔥🔥🔥 About to emit socket from placeOrder()");
+    //notification to the admin using WebSocket
+    // Add this to the createOrder function or wherever orders are created
+    const io = req.app.locals.io;
+    //console.log("🔥🔥🔥 About to emit socket from placeOrder()");
 
-// Format book details properly for the notification
-const formattedBooks = orderedBooks.map(book => ({
-  title: book.title || 'Unknown Book',
-  quantity: book.quantity || 1,
-  price: book.price || 0
-}));
+    // Format book details properly for the notification
+    const formattedBooks = orderedBooks.map((book) => ({
+      title: book.title || "Unknown Book",
+      quantity: book.quantity || 1,
+      price: book.price || 0,
+    }));
 
-// Consolidated socket emit - single notification with all data
-io.emit("newOrderNotification", {
-  orderId: newOrder[0]._id,
-  userName: `${user.firstName} ${user.lastName}`,
-  totalAmount: totalPrice,
-  timestamp: new Date().toISOString(),
-  books: formattedBooks,
-  user: {
-    name: user.firstName,
-    email: user.email
-  }
-});
-
+    // Consolidated socket emit - single notification with all data
+    io.emit("newOrderNotification", {
+      orderId: newOrder[0]._id,
+      userName: `${user.firstName} ${user.lastName}`,
+      totalAmount: totalPrice,
+      timestamp: new Date().toISOString(),
+      books: formattedBooks,
+      user: {
+        name: user.firstName,
+        email: user.email,
+      },
+    });
 
     session.endSession();
 
@@ -198,14 +184,15 @@ io.emit("newOrderNotification", {
 //   }
 // };
 
-
 const getOrderHistory = async (req, res) => {
   try {
     const userEmail = req.user.email;
 
     const user = await User.findOne({ email: userEmail });
     if (!user) {
-      return res.status(404).json({ status: "Failure", message: "User not found" });
+      return res
+        .status(404)
+        .json({ status: "Failure", message: "User not found" });
     }
 
     const page = parseInt(req.query.page) || 1;
@@ -245,7 +232,6 @@ const getOrderHistory = async (req, res) => {
       count: formatted.length,
       data: formatted,
     });
-
   } catch (err) {
     res.status(500).json({
       status: "Failure",
@@ -254,10 +240,6 @@ const getOrderHistory = async (req, res) => {
     });
   }
 };
-
-
-
-
 
 // Admin: Get all orders with pagination
 const getAllOrders = async (req, res) => {
@@ -268,7 +250,7 @@ const getAllOrders = async (req, res) => {
 
     // Build query object based on filters
     const query = {};
-    
+
     // Add status filter if provided
     if (req.query.status) {
       query.status = req.query.status;
@@ -393,7 +375,15 @@ const updateOrderStatus = async (req, res) => {
     }
 
     // Validate status
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'completed','paid'];
+    const validStatuses = [
+      "pending",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancelled",
+      "completed",
+      "paid",
+    ];
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
@@ -401,68 +391,70 @@ const updateOrderStatus = async (req, res) => {
         message: "Invalid status value",
       });
     }
-    
+
     // Get the current order to check its status
     const currentOrder = await Order.findById(orderId);
-    
+
     if (!currentOrder) {
       return res.status(404).json({
         status: "Failure",
         message: "Order not found",
       });
     }
-    
+
     // Prevent any status updates for cancelled orders
-    if (currentOrder.status === 'cancelled') {
+    if (currentOrder.status === "cancelled") {
       return res.status(400).json({
         status: "Failure",
         message: "Cannot update status of a cancelled order",
       });
     }
-    
+
     // Prevent cancellation of delivered orders
-    if (status === 'cancelled' && currentOrder.status === 'delivered') {
+    if (status === "cancelled" && currentOrder.status === "delivered") {
       return res.status(400).json({
         status: "Failure",
         message: "Cannot cancel an order that has been delivered",
       });
     }
-    
+
     // Prevent changing from delivered to shipped
-    if (status === 'shipped' && currentOrder.status === 'delivered') {
+    if (status === "shipped" && currentOrder.status === "delivered") {
       return res.status(400).json({
         status: "Failure",
         message: "Cannot change status from delivered to shipped",
       });
     }
-    
+
     // Process refund if status is being changed to cancelled and there's a payment intent
-    if (status === 'cancelled' && currentOrder.paymentIntentId) {
+    if (status === "cancelled" && currentOrder.paymentIntentId) {
       try {
         // Create refund through Stripe
         const refund = await stripe.refunds.create({
-          payment_intent: currentOrder.paymentIntentId
+          payment_intent: currentOrder.paymentIntentId,
         });
-        
-        console.log(`Refund processed for order ${orderId}: ${refund.status}`);
-        
+
+        //console.log(`Refund processed for order ${orderId}: ${refund.status}`);
+
         // Add refund information to the order
         currentOrder.refundStatus = refund.status;
         currentOrder.refundId = refund.id;
         currentOrder.refundDate = new Date();
       } catch (refundError) {
-        console.error('Error processing refund:', refundError);
+        console.error("Error processing refund:", refundError);
         // Continue with status update even if refund fails
       }
     }
 
     const updatedOrder = await Order.findByIdAndUpdate(
       orderId,
-      { 
+      {
         status,
-        ...(currentOrder.refundStatus && { refundStatus: currentOrder.refundStatus }),
+        ...(currentOrder.refundStatus && {
+          refundStatus: currentOrder.refundStatus,
+        }),
         ...(currentOrder.refundId && { refundId: currentOrder.refundId }),
-        ...(currentOrder.refundDate && { refundDate: currentOrder.refundDate })
+        ...(currentOrder.refundDate && { refundDate: currentOrder.refundDate }),
       },
       { new: true }
     );

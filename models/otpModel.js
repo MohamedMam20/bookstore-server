@@ -40,9 +40,9 @@ otpSchema.pre("save", async function (next) {
     //   if (this.type === 'register') {
     const sendVerificationEmail = require("../utils/sendVerificationEmail");
     await sendVerificationEmail(this.email, plainOtp);
-    console.log("Verification OTP email sent.");
+    //console.log("Verification OTP email sent.");
   } else {
-    console.log("No email sent for reset OTP.");
+    //console.log("No email sent for reset OTP.");
   }
 
   next();

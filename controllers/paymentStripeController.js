@@ -34,30 +34,31 @@ const notifyAdmin = async (order, req) => {
     <p>View the order in the admin dashboard.</p>
   `;
   await sendUserEmail(adminEmail, subject, html);
-  
+
   // Add socket notification for real-time updates
   // In the notifyAdmin function, around line 41
   if (req && req.app && req.app.locals.io) {
     const io = req.app.locals.io;
-    
+
     // Only emit socket notification if this is a new order (not from payment confirmation)
     // This prevents duplicate notifications when called from confirmPayment
-    if (order.status !== 'processing') {
+    if (order.status !== "processing") {
       try {
         // Get book details from the order
-        const bookDetails = order.books.map(item => ({
-          title: (item.book && item.book.title) ? item.book.title : 'Unknown Book',
+        const bookDetails = order.books.map((item) => ({
+          title:
+            item.book && item.book.title ? item.book.title : "Unknown Book",
           quantity: item.quantity || 1,
-          price: item.price || 0
+          price: item.price || 0,
         }));
-        
+
         // Get user details
-        let userName = 'a customer';
+        let userName = "a customer";
         if (req.user && req.user.firstName) {
-          userName = `${req.user.firstName} ${req.user.lastName || ''}`.trim();
+          userName = `${req.user.firstName} ${req.user.lastName || ""}`.trim();
         }
-        
-        io.emit('newOrderNotification', {
+
+        io.emit("newOrderNotification", {
           orderId: order._id,
           userName: userName,
           totalAmount: order.totalPrice,
@@ -65,28 +66,28 @@ const notifyAdmin = async (order, req) => {
           books: bookDetails, // Add book details to the notification
           user: {
             name: userName,
-            email: req.user ? req.user.email : 'unknown'
+            email: req.user ? req.user.email : "unknown",
           },
           data: {
             orderId: order._id,
             totalAmount: order.totalPrice,
-            status: order.status
-          }
+            status: order.status,
+          },
         });
-        console.log("🔔 Socket notification sent for new order:", order._id);
+        //console.log("🔔 Socket notification sent for new order:", order._id);
       } catch (error) {
         console.error("❌ Error formatting notification data:", error);
       }
     } else {
-      console.log("⏩ Skipping duplicate socket notification for order:", order._id);
+      //console.log("⏩ Skipping duplicate socket notification for order:", order._id);
     }
   } else {
-    console.log("❌ Socket.io not available for notification");
+    //console.log("❌ Socket.io not available for notification");
   }
 };
 
 exports.createCheckout = async (req, res) => {
-  console.log("📥 Received body:", req.body);
+  //console.log("📥 Received body:", req.body);
   const { productId, quantity, amount, cartItems, language } = req.body;
   const userId = req.user.id;
   const email = req.user.email;
@@ -252,11 +253,9 @@ exports.confirmPayment = async (req, res) => {
         book.stock[orderBook.language || "ar"] < orderBook.quantity
       ) {
         await session.abortTransaction();
-        return res
-          .status(400)
-          .json({
-            error: `Stock no longer available for ${book?.title || "Unknown"}`,
-          });
+        return res.status(400).json({
+          error: `Stock no longer available for ${book?.title || "Unknown"}`,
+        });
       }
 
       book.stock[orderBook.language || "ar"] -= orderBook.quantity;
