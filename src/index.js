@@ -47,7 +47,8 @@ const io = socketIo(server, {
   cors: {
     origin: [
       "http://localhost:4200",
-      "https://book-store-backend-production.up.railway.app", 
+      "https://book-store-client-ten-alpha.vercel.app", 
+      "https://book-store-backend-production.up.railway.app"
     ],
     methods: ["GET", "POST"],
     credentials: true,
@@ -67,7 +68,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:4200",
-      "https://book-store-backend-production.up.railway.app", 
+      "https://book-store-client-ten-alpha.vercel.app", 
+      "https://book-store-backend-production.up.railway.app"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
