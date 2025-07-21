@@ -4,8 +4,7 @@ const axios = require("axios");
 require("dotenv").config();
 
 const COHERE_API_KEY = process.env.COHERE_API_KEY;
-console.log("Cohere API Key:", COHERE_API_KEY);
-
+//console.log("Cohere API Key:", COHERE_API_KEY);
 
 async function getAIResponse(message) {
   try {
@@ -16,12 +15,13 @@ async function getAIResponse(message) {
         chat_history: [
           {
             role: "user",
-            message: "You are a helpful assistant that only recommends books and answers only about books or book genres."
-          }
+            message:
+              "You are a helpful assistant that only recommends books and answers only about books or book genres.",
+          },
         ],
         max_tokens: 40,
         temperature: 0.4,
-        model: "command-r-plus"
+        model: "command-r-plus",
       },
       {
         headers: {
@@ -41,7 +41,6 @@ async function getAIResponse(message) {
     return "❌ Error communicating with Cohere AI.";
   }
 }
-
 
 router.post("/", async (req, res) => {
   const userMessage = req.body.message;

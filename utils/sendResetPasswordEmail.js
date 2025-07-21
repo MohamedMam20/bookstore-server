@@ -1,4 +1,4 @@
-const mailSender = require('./mailSender');
+const mailSender = require("./mailSender");
 
 const sendResetPasswordEmail = async (email, otp) => {
   try {
@@ -13,7 +13,7 @@ const sendResetPasswordEmail = async (email, otp) => {
       <hr />
       <small>Book Shelf Team</small>`
     );
-    console.log("Reset password email sent:", mailResponse);
+    //console.log("Reset password email sent:", mailResponse);
   } catch (error) {
     console.error("Error sending reset password email:", error);
     throw error;

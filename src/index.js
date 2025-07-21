@@ -45,12 +45,15 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:4200",
+    origin: [
+      "http://localhost:4200",
+      "https://book-store-client-ten-alpha.vercel.app", 
+      "https://book-store-backend-production.up.railway.app"
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
-
 app.locals.io = io;
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -65,7 +68,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:4200",
-      "https://book-store-client-ten-alpha.vercel.app",
+      "https://book-store-client-ten-alpha.vercel.app", 
+      "https://book-store-backend-production.up.railway.app"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -112,7 +116,7 @@ app.use("/api/v1/search", searchRoutes);
 //test socket
 app.get("/test-socket", (req, res) => {
   const io = req.app.locals.io;
-  console.log("🔥 Sending test WebSocket notification");
+  //console.log("🔥 Sending test WebSocket notification");
   io.emit("newOrderNotification", {
     test: "This is a test notification",
     timestamp: new Date().toISOString(),

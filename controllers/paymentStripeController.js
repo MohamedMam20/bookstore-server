@@ -34,7 +34,7 @@ const notifyAdmin = async (order, req) => {
     <p>View the order in the admin dashboard.</p>
   `;
   await sendUserEmail(adminEmail, subject, html);
-  
+
   // Add socket notification for real-time updates
   if (req && req.app && req.app.locals.io) {
     const io = req.app.locals.io;
@@ -76,6 +76,7 @@ const notifyAdmin = async (order, req) => {
           email: req.user ? req.user.email : 'unknown'
         },
         data: {
+
           orderId: order._id,
           totalAmount: order.totalPrice,
           status: order.status
@@ -94,14 +95,15 @@ const notifyAdmin = async (order, req) => {
       console.log("🔔 Socket notification sent for new order:", order._id);
     } catch (error) {
       console.error("❌ Error formatting notification data:", error);
+
     }
   } else {
-    console.log("❌ Socket.io not available for notification");
+    //console.log("❌ Socket.io not available for notification");
   }
 };
 
 exports.createCheckout = async (req, res) => {
-  console.log("📥 Received body:", req.body);
+  //console.log("📥 Received body:", req.body);
   const { productId, quantity, amount, cartItems, language } = req.body;
   const userId = req.user.id;
   const email = req.user.email;
@@ -268,11 +270,9 @@ exports.confirmPayment = async (req, res) => {
         book.stock[orderBook.language || "ar"] < orderBook.quantity
       ) {
         await session.abortTransaction();
-        return res
-          .status(400)
-          .json({
-            error: `Stock no longer available for ${book?.title || "Unknown"}`,
-          });
+        return res.status(400).json({
+          error: `Stock no longer available for ${book?.title || "Unknown"}`,
+        });
       }
 
       book.stock[orderBook.language || "ar"] -= orderBook.quantity;

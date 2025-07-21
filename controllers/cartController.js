@@ -33,7 +33,7 @@ exports.addToCart = async (req, res) => {
         }
       }
     }
-    console.log(lang);
+    //console.log(lang);
 
     const stock = book.stock?.[lang];
 

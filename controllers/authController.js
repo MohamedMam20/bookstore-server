@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const { validationResult } = require("express-validator");
 const User = require("../models/usersModel");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const OTP = require("../models/otpModel");
 const otpGenerator = require("otp-generator");
@@ -154,12 +154,10 @@ const requestPasswordReset = async (req, res) => {
       createdAt: -1,
     });
     if (previousOtp && Date.now() - previousOtp.createdAt < 60 * 1000) {
-      return res
-        .status(429)
-        .json({
-          success: false,
-          message: "Please wait before requesting another OTP.",
-        });
+      return res.status(429).json({
+        success: false,
+        message: "Please wait before requesting another OTP.",
+      });
     }
 
     // Generate and hash OTP
@@ -184,13 +182,11 @@ const requestPasswordReset = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in requestPasswordReset:", error.message);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
 
@@ -301,7 +297,7 @@ const googleLogin = async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-    console.log("Decoded payload:", payload);
+    //console.log("Decoded payload:", payload);
 
     const { email, given_name: firstName, family_name: lastName } = payload;
 
@@ -323,13 +319,12 @@ const googleLogin = async (req, res) => {
       });
     }
 
- const tokenRes = generateAccessToken({
-  id: user._id,
-  name: `${user.firstName} ${user.lastName}`.trim(),
-  email: user.email,
-  role: user.role,
-});
-
+    const tokenRes = generateAccessToken({
+      id: user._id,
+      name: `${user.firstName} ${user.lastName}`.trim(),
+      email: user.email,
+      role: user.role,
+    });
 
     res.status(200).json({
       success: true,
