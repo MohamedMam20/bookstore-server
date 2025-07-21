@@ -14,6 +14,157 @@ const {
   getBookBySlug
 } = require("../controllers/bookManagementController");
 
+/**
+ * @swagger
+ * tags:
+ *   name: Book Management
+ *   description: Book management endpoints
+ */
+
+/**
+ * @swagger
+ * /books:
+ *   get:
+ *     summary: Get all books
+ *     tags: [Book Management]
+ *     responses:
+ *       200:
+ *         description: List of all books
+ *
+ *   post:
+ *     summary: Create new book
+ *     tags: [Book Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - author
+ *               - price
+ *               - image
+ *             properties:
+ *               title:
+ *                 type: string
+ *               author:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               description:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Book created successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
+ */
+
+/**
+ * @swagger
+ * /books/{id}:
+ *   get:
+ *     summary: Get book by ID
+ *     tags: [Book Management]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Book details
+ *       404:
+ *         description: Book not found
+ *
+ *   put:
+ *     summary: Update book
+ *     tags: [Book Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               author:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               description:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Book updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       404:
+ *         description: Book not found
+ *
+ *   delete:
+ *     summary: Delete book
+ *     tags: [Book Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Book deleted
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       404:
+ *         description: Book not found
+ */
+
+/**
+ * @swagger
+ * /books/slug/{slug}:
+ *   get:
+ *     summary: Get book by slug
+ *     tags: [Book Management]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Book details
+ *       404:
+ *         description: Book not found
+ */
+
 // Create a new book
 router.post("/", verifyToken, admin, validateIBook, upload.single("image"), createBook);
 
