@@ -45,7 +45,10 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:4200",
+    origin: [
+      "http://localhost:4200",
+      "https://book-store-client-ten-alpha.vercel.app",
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
