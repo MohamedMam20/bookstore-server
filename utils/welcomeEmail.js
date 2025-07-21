@@ -1,4 +1,4 @@
-const mailSender = require("./mailSender");
+const mailSender = require('./mailSender');
 
 const WelcomeEmail = async (email, firstName) => {
   try {

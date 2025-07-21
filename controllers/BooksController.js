@@ -5,61 +5,42 @@ const cache = require("../utils/cache");
 
 exports.getBooks = async (req, res) => {
   try {
-    const {
-      sort = "createdAt_desc",
-      page = 1,
-      limit = 6,
-      genre,
-      language,
-      priceMin,
-      priceMax,
-    } = req.query;
+    const { sort = "createdAt_desc", page = 1, limit = 6, genre, language, priceMin, priceMax } = req.query;
 
     // Parse page/limit
     const pageNum = Math.max(parseInt(page), 1);
     const limitNum = Math.max(parseInt(limit), 1);
-
+    
     // Check if there are any filters applied
     const hasFilters = genre || language || priceMin || priceMax;
-
+    
     // Only use cache for standard requests without filters
     if (!hasFilters) {
       // Try to get from cache first
-      const cacheKey = `books:${JSON.stringify({
-        page: pageNum,
-        limit: limitNum,
-        sort,
-      })}`;
+      const cacheKey = `books:${JSON.stringify({ page: pageNum, limit: limitNum, sort })}`;
       const cachedData = cache.get(cacheKey);
-
+      
       if (cachedData) {
-        //console.log(`📖 Cache hit for books page ${pageNum}`);
-
+        console.log(`📖 Cache hit for books page ${pageNum}`);
+        
         // Only trigger caching of the NEXT page (not a chain reaction)
         const nextPage = pageNum + 1;
         if (nextPage <= cachedData.totalPages) {
-          const nextPageCacheKey = `books:${JSON.stringify({
-            page: nextPage,
-            limit: limitNum,
-            sort,
-          })}`;
+          const nextPageCacheKey = `books:${JSON.stringify({ page: nextPage, limit: limitNum, sort })}`;
           // If next page isn't cached, trigger caching in background
           if (!cache.has(nextPageCacheKey)) {
             process.nextTick(async () => {
               try {
                 const { cacheSinglePage } = require("../utils/prewarmCache");
                 await cacheSinglePage(nextPage, limitNum, sort);
-                //console.log(`🔄 Progressive caching triggered for page ${nextPage} after hit on page ${pageNum}`);
+                console.log(`🔄 Progressive caching triggered for page ${nextPage} after hit on page ${pageNum}`);
               } catch (err) {
-                console.error(
-                  `Failed to progressively cache page ${nextPage}:`,
-                  err
-                );
+                console.error(`Failed to progressively cache page ${nextPage}:`, err);
               }
             });
           }
         }
-
+        
         return res.status(200).json(cachedData);
       }
     }
@@ -85,7 +66,7 @@ exports.getBooks = async (req, res) => {
         sortOption = { createdAt: -1 };
     }
 
-    //console.log("Sort option:", sortOption);
+    console.log("Sort option:", sortOption);
 
     // Build query with filters
     const query = {};
@@ -94,10 +75,10 @@ exports.getBooks = async (req, res) => {
     if (genre) {
       const fieldToQuery = "category.name";
       if (Array.isArray(genre)) {
-        const genreRegexes = genre.map((g) => new RegExp(`^${g}$`, "i"));
+        const genreRegexes = genre.map(g => new RegExp(`^${g}$`, 'i'));
         query[fieldToQuery] = { $in: genreRegexes };
       } else {
-        query[fieldToQuery] = { $regex: new RegExp(`^${genre}$`, "i") };
+        query[fieldToQuery] = { $regex: new RegExp(`^${genre}$`, 'i') };
       }
     }
 
@@ -135,7 +116,7 @@ exports.getBooks = async (req, res) => {
       .skip(skip)
       .limit(limitNum)
       .lean(); // Use lean for performance and to avoid document conversion issues
-
+      
     const total = await Book.countDocuments(query);
 
     const response = {
@@ -148,36 +129,25 @@ exports.getBooks = async (req, res) => {
       results: books.length,
       data: books,
     };
-
+    
     // Cache the result if there are no filters
     if (!hasFilters) {
-      const cacheKey = `books:${JSON.stringify({
-        page: pageNum,
-        limit: limitNum,
-        sort,
-      })}`;
+      const cacheKey = `books:${JSON.stringify({ page: pageNum, limit: limitNum, sort })}`;
       cache.set(cacheKey, response);
-      //console.log(`💾 Cached books page ${pageNum}`);
-
+      console.log(`💾 Cached books page ${pageNum}`);
+      
       // Cache the next page only, not all subsequent pages
       const nextPage = pageNum + 1;
       if (nextPage <= response.totalPages) {
-        const nextPageKey = `books:${JSON.stringify({
-          page: nextPage,
-          limit: limitNum,
-          sort,
-        })}`;
+        const nextPageKey = `books:${JSON.stringify({ page: nextPage, limit: limitNum, sort })}`;
         if (!cache.has(nextPageKey)) {
           process.nextTick(async () => {
             try {
               const { cacheSinglePage } = require("../utils/prewarmCache");
               await cacheSinglePage(nextPage, limitNum, sort);
-              //console.log(`🔄 Proactively cached next page ${nextPage} after request for page ${pageNum}`);
+              console.log(`🔄 Proactively cached next page ${nextPage} after request for page ${pageNum}`);
             } catch (err) {
-              console.error(
-                `Failed to progressively cache page ${nextPage}:`,
-                err
-              );
+              console.error(`Failed to progressively cache page ${nextPage}:`, err);
             }
           });
         }
@@ -196,15 +166,16 @@ exports.getBooks = async (req, res) => {
 exports.getBookById = async (req, res) => {
   try {
     const bookId = req.params.id;
-    //console.log("ID received:", bookId);
+    console.log("ID received:", bookId);
 
     if (!mongoose.Types.ObjectId.isValid(bookId)) {
-      //console.log("Invalid ObjectId format");
+      console.log("Invalid ObjectId format");
       return res.status(400).json({ message: "Invalid book ID" });
     }
     // Note: This function doesn't do anything with the ID yet.
     // You would typically fetch and return a book here.
     res.status(200).json({ message: "Book ID is valid." });
+
   } catch (err) {
     console.error("Error in getBookById:", err);
     res.status(500).json({ message: "Server error", error: err.message });
@@ -213,9 +184,9 @@ exports.getBookById = async (req, res) => {
 
 exports.getBookBySlug = async (req, res) => {
   try {
-    const book = await Book.findOne({ slug: req.params.slug })
-      .populate("reviews")
-      .lean(); // Use .lean() for a plain JS object to allow modification
+    const book = await Book.findOne({ slug: req.params.slug }).populate(
+      "reviews"
+    ).lean(); // Use .lean() for a plain JS object to allow modification
 
     if (!book) {
       return res
@@ -239,9 +210,10 @@ exports.getBookBySlug = async (req, res) => {
     };
 
     res.status(200).json({
-      success: true,
-      data: responseData,
+        success: true,
+        data: responseData
     });
+
   } catch (err) {
     res
       .status(500)

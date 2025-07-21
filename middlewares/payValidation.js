@@ -1,3 +1,5 @@
+
+
 // const jwt = require("jsonwebtoken");
 
 // const User = require("../models/usersModel");
@@ -63,16 +65,16 @@ exports.loginUser = async (req, res) => {
 };
 module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  //console.log("Auth Header:", authHeader);
-  //console.log("TOKEN_SECRET:", process.env.TOKEN_SECRET);
+  console.log("Auth Header:", authHeader);
+  console.log("TOKEN_SECRET:", process.env.TOKEN_SECRET);
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ message: "Please login first" });
   }
   const token = authHeader.split(" ")[1];
-  //console.log("Token:", token);
+  console.log("Token:", token);
   try {
     const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
-    //console.log("Decoded Token:", decoded);
+    console.log("Decoded Token:", decoded);
     req.user = decoded;
     next();
   } catch (err) {

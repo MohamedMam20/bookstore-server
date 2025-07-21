@@ -22,7 +22,7 @@ const sendUserEmail = async (to, subject, html) => {
   });
 };
 
-const notifyAdmin = async (order) => {
+const notifyAdmin = async (order, req) => {
   const adminEmail = process.env.ADMIN_EMAIL;
   const subject = "New Order Placed 📅";
   const html = `
@@ -30,14 +30,63 @@ const notifyAdmin = async (order) => {
     <p><strong>Order ID:</strong> ${order._id}</p>
     <p><strong>User:</strong> ${order.user}</p>
     <p><strong>Total:</strong> ${order.totalPrice} EGP</p>
-      <p><strong>Status:</strong> ${order.status}</p>
+    <p><strong>Status:</strong> ${order.status}</p>
     <p>View the order in the admin dashboard.</p>
   `;
   await sendUserEmail(adminEmail, subject, html);
+  
+  // Add socket notification for real-time updates
+  // In the notifyAdmin function, around line 41
+  if (req && req.app && req.app.locals.io) {
+    const io = req.app.locals.io;
+    
+    // Only emit socket notification if this is a new order (not from payment confirmation)
+    // This prevents duplicate notifications when called from confirmPayment
+    if (order.status !== 'processing') {
+      try {
+        // Get book details from the order
+        const bookDetails = order.books.map(item => ({
+          title: (item.book && item.book.title) ? item.book.title : 'Unknown Book',
+          quantity: item.quantity || 1,
+          price: item.price || 0
+        }));
+        
+        // Get user details
+        let userName = 'a customer';
+        if (req.user && req.user.firstName) {
+          userName = `${req.user.firstName} ${req.user.lastName || ''}`.trim();
+        }
+        
+        io.emit('newOrderNotification', {
+          orderId: order._id,
+          userName: userName,
+          totalAmount: order.totalPrice,
+          timestamp: new Date().toISOString(),
+          books: bookDetails, // Add book details to the notification
+          user: {
+            name: userName,
+            email: req.user ? req.user.email : 'unknown'
+          },
+          data: {
+            orderId: order._id,
+            totalAmount: order.totalPrice,
+            status: order.status
+          }
+        });
+        console.log("🔔 Socket notification sent for new order:", order._id);
+      } catch (error) {
+        console.error("❌ Error formatting notification data:", error);
+      }
+    } else {
+      console.log("⏩ Skipping duplicate socket notification for order:", order._id);
+    }
+  } else {
+    console.log("❌ Socket.io not available for notification");
+  }
 };
 
 exports.createCheckout = async (req, res) => {
-  //console.log("📥 Received body:", req.body);
+  console.log("📥 Received body:", req.body);
   const { productId, quantity, amount, cartItems, language } = req.body;
   const userId = req.user.id;
   const email = req.user.email;
@@ -147,7 +196,11 @@ exports.createCheckout = async (req, res) => {
 
     await session.commitTransaction();
 
-    await notifyAdmin(order);
+    // In createCheckout function (around line 150)
+    await notifyAdmin(order, req);
+
+    // In confirmPayment function (around line 235)
+    await notifyAdmin(order, req);
 
     res.json({
       clientSecret: paymentIntent.client_secret,
@@ -199,9 +252,11 @@ exports.confirmPayment = async (req, res) => {
         book.stock[orderBook.language || "ar"] < orderBook.quantity
       ) {
         await session.abortTransaction();
-        return res.status(400).json({
-          error: `Stock no longer available for ${book?.title || "Unknown"}`,
-        });
+        return res
+          .status(400)
+          .json({
+            error: `Stock no longer available for ${book?.title || "Unknown"}`,
+          });
       }
 
       book.stock[orderBook.language || "ar"] -= orderBook.quantity;
@@ -230,7 +285,8 @@ exports.confirmPayment = async (req, res) => {
     await session.commitTransaction();
 
     try {
-      await notifyAdmin(order);
+      // In confirmPayment function (if it calls notifyAdmin)
+      await notifyAdmin(order, req);
     } catch (emailError) {
       console.error(
         "❌ Admin email failed, but payment processed:",

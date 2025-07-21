@@ -1,6 +1,7 @@
-const mongoose = require("mongoose");
-const sendVerificationEmail = require("../utils/sendVerificationEmail");
-const bcrypt = require("bcryptjs");
+const mongoose = require('mongoose');
+const sendVerificationEmail = require('../utils/sendVerificationEmail');
+const bcrypt = require("bcrypt");
+
 
 const otpSchema = new mongoose.Schema({
   email: {
@@ -14,31 +15,34 @@ const otpSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 60 * 5, // 5 minutes
+    expires: 60 * 5,  // 5 minutes
   },
   type: {
-    type: String,
-    enum: ["register", "reset"],
-    default: "register",
-  },
+  type: String,
+  enum: ["register", "reset"],
+  default: "register"
+},
+
 });
 
+
+
+
 otpSchema.pre("save", async function (next) {
-  const existing = await this.constructor
-    .findOne({ email: this.email })
-    .sort({ createdAt: -1 });
-  if (this.type === "register") {
-    if (existing && Date.now() - existing.createdAt < 60 * 1000) {
-      throw new Error("Please wait before requesting another OTP.");
-    }
+  const existing = await this.constructor.findOne({ email: this.email }).sort({ createdAt: -1 });
+  if (this.type === 'register') {
 
-    const plainOtp = this.otp;
-    const saltRounds = Number(process.env.SALT_ROUNDS);
-    const salt = await bcrypt.genSalt(saltRounds);
-    this.otp = await bcrypt.hash(this.otp, salt);
+  if (existing && Date.now() - existing.createdAt < 60 * 1000) {
+    throw new Error("Please wait before requesting another OTP.");
+  }
 
-    //   if (this.type === 'register') {
-    const sendVerificationEmail = require("../utils/sendVerificationEmail");
+  const plainOtp = this.otp;
+  const saltRounds = Number(process.env.SALT_ROUNDS);
+  const salt = await bcrypt.genSalt(saltRounds);
+  this.otp = await bcrypt.hash(this.otp, salt);
+
+//   if (this.type === 'register') {
+     const sendVerificationEmail = require('../utils/sendVerificationEmail');
     await sendVerificationEmail(this.email, plainOtp);
     console.log("Verification OTP email sent.");
   } else {
@@ -48,4 +52,13 @@ otpSchema.pre("save", async function (next) {
   next();
 });
 
+
+
+
+
+
+
+
 module.exports = mongoose.model("OTP", otpSchema);
+
+
