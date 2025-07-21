@@ -29,13 +29,21 @@
 
 // module.exports = OrderConfirmationEmail;
 
-const mailSender = require('./mailSender');
+const mailSender = require("./mailSender");
 
-const OrderConfirmationEmail = async (email, firstName, orderId, totalPrice, books = []) => {
+const OrderConfirmationEmail = async (
+  email,
+  firstName,
+  orderId,
+  totalPrice,
+  books = []
+) => {
   try {
-    const bookListHTML = books.map((b) => {
-      return `<li><strong>${b.title}</strong> — Quantity: ${b.quantity}</li>`;
-    }).join('');
+    const bookListHTML = books
+      .map((b) => {
+        return `<li><strong>${b.title}</strong> — Quantity: ${b.quantity}</li>`;
+      })
+      .join("");
 
     const mailResponse = await mailSender(
       email,
@@ -61,7 +69,7 @@ const OrderConfirmationEmail = async (email, firstName, orderId, totalPrice, boo
       <p>Happy Reading!<br/><small>— The Book Shelf Team</small></p>`
     );
 
-    console.log("Order confirmation email sent:", mailResponse);
+    //console.log("Order confirmation email sent:", mailResponse);
   } catch (error) {
     console.error("Error sending order confirmation email:", error);
     throw error;

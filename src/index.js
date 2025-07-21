@@ -115,7 +115,7 @@ app.use("/api/v1/search", searchRoutes);
 //test socket
 app.get("/test-socket", (req, res) => {
   const io = req.app.locals.io;
-  console.log("🔥 Sending test WebSocket notification");
+  //console.log("🔥 Sending test WebSocket notification");
   io.emit("newOrderNotification", {
     test: "This is a test notification",
     timestamp: new Date().toISOString(),

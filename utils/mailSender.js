@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 const mailSender = async (email, title, body) => {
   try {
@@ -7,15 +7,15 @@ const mailSender = async (email, title, body) => {
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
-      }
+      },
     });
     let info = await transporter.sendMail({
-    from: '"Book Shelf 📚" <yassmin.sayed868@gmail.com>',
+      from: '"Book Shelf 📚" <yassmin.sayed868@gmail.com>',
       to: email,
       subject: title,
       html: body,
     });
-    console.log("Email info: ", info);
+    //console.log("Email info: ", info);
     return info;
   } catch (error) {
     console.log(error.message);

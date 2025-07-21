@@ -297,7 +297,7 @@ const googleLogin = async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-    console.log("Decoded payload:", payload);
+    //console.log("Decoded payload:", payload);
 
     const { email, given_name: firstName, family_name: lastName } = payload;
 
