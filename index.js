@@ -3,19 +3,15 @@ require("./jobs/clearPendingOrders");
 
 const express = require("express");
 
-
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
-
 
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 const cors = require("cors");
-const http = require("http");             
-const socketIo = require("socket.io");      
+const http = require("http");
+const socketIo = require("socket.io");
 const preWarmHomepageCache = require("./utils/prewarmCache");
-
-
 
 // Custom Modules
 const connectDB = require("./config/database");
@@ -49,7 +45,10 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:4200",
+    origin: [
+      "http://localhost:4200",
+      "https://book-store-client-ten-alpha.vercel.app",
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -65,12 +64,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
-app.use(cors({
-  origin: ["http://localhost:4200"],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:4200",
+      "https://book-store-client-ten-alpha.vercel.app",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  })
+);
 
 // User and Auth
 app.use("/api/v1/users", usersRoutes);
