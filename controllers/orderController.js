@@ -109,31 +109,29 @@ const placeOrder = async (req, res) => {
       orderedBooks
     );
 
-//notification to the admin using WebSocket
-// Add this to the createOrder function or wherever orders are created
-const io = req.app.locals.io;
-console.log("🔥🔥🔥 About to emit socket from placeOrder()");
-
-// Format book details properly for the notification
-const formattedBooks = orderedBooks.map(book => ({
-  title: book.title || 'Unknown Book',
-  quantity: book.quantity || 1,
-  price: book.price || 0
-}));
-
-// Consolidated socket emit - single notification with all data
-io.emit("newOrderNotification", {
-  orderId: newOrder[0]._id,
-  userName: `${user.firstName} ${user.lastName}`,
-  totalAmount: totalPrice,
-  timestamp: new Date().toISOString(),
-  books: formattedBooks,
-  user: {
-    name: user.firstName,
-    email: user.email
-  }
-});
-
+    // Remove duplicate WebSocket notification - this is already handled in paymentStripeController.js
+    // const io = req.app.locals.io;
+    // console.log("🔥🔥🔥 About to emit socket from placeOrder()");
+    // 
+    // // Format book details properly for the notification
+    // const formattedBooks = orderedBooks.map(book => ({
+    //   title: book.title || 'Unknown Book',
+    //   quantity: book.quantity || 1,
+    //   price: book.price || 0
+    // }));
+    // 
+    // // Consolidated socket emit - single notification with all data
+    // io.emit("newOrderNotification", {
+    //   orderId: newOrder[0]._id,
+    //   userName: `${user.firstName} ${user.lastName}`,
+    //   totalAmount: totalPrice,
+    //   timestamp: new Date().toISOString(),
+    //   books: formattedBooks,
+    //   user: {
+    //     name: user.firstName,
+    //     email: user.email
+    //   }
+    // });
 
     session.endSession();
 

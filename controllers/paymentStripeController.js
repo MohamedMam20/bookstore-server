@@ -36,49 +36,64 @@ const notifyAdmin = async (order, req) => {
   await sendUserEmail(adminEmail, subject, html);
   
   // Add socket notification for real-time updates
-  // In the notifyAdmin function, around line 41
   if (req && req.app && req.app.locals.io) {
     const io = req.app.locals.io;
     
-    // Only emit socket notification if this is a new order (not from payment confirmation)
-    // This prevents duplicate notifications when called from confirmPayment
-    if (order.status !== 'processing') {
-      try {
-        // Get book details from the order
-        const bookDetails = order.books.map(item => ({
-          title: (item.book && item.book.title) ? item.book.title : 'Unknown Book',
-          quantity: item.quantity || 1,
-          price: item.price || 0
-        }));
-        
-        // Get user details
-        let userName = 'a customer';
-        if (req.user && req.user.firstName) {
-          userName = `${req.user.firstName} ${req.user.lastName || ''}`.trim();
-        }
-        
-        io.emit('newOrderNotification', {
-          orderId: order._id,
-          userName: userName,
-          totalAmount: order.totalPrice,
-          timestamp: new Date().toISOString(),
-          books: bookDetails, // Add book details to the notification
-          user: {
-            name: userName,
-            email: req.user ? req.user.email : 'unknown'
-          },
-          data: {
-            orderId: order._id,
-            totalAmount: order.totalPrice,
-            status: order.status
-          }
-        });
-        console.log("🔔 Socket notification sent for new order:", order._id);
-      } catch (error) {
-        console.error("❌ Error formatting notification data:", error);
-      }
-    } else {
+    // Track sent notifications to prevent duplicates
+    if (!req.app.locals.sentNotifications) {
+      req.app.locals.sentNotifications = new Set();
+    }
+    
+    // Check if we've already sent a notification for this order
+    const notificationKey = `order_${order._id}`;
+    if (req.app.locals.sentNotifications.has(notificationKey)) {
       console.log("⏩ Skipping duplicate socket notification for order:", order._id);
+      return;
+    }
+    
+    try {
+      // Get book details from the order
+      const bookDetails = order.books.map(item => ({
+        title: (item.book && item.book.title) ? item.book.title : 'Unknown Book',
+        quantity: item.quantity || 1,
+        price: item.price || 0
+      }));
+      
+      // Get user details
+      let userName = 'a customer';
+      if (req.user && req.user.firstName) {
+        userName = `${req.user.firstName} ${req.user.lastName || ''}`.trim();
+      }
+      
+      io.emit('newOrderNotification', {
+        orderId: order._id,
+        userName: userName,
+        totalAmount: order.totalPrice,
+        timestamp: new Date().toISOString(),
+        books: bookDetails, // Add book details to the notification
+        user: {
+          name: userName,
+          email: req.user ? req.user.email : 'unknown'
+        },
+        data: {
+          orderId: order._id,
+          totalAmount: order.totalPrice,
+          status: order.status
+        }
+      });
+      
+      // Mark this notification as sent
+      req.app.locals.sentNotifications.add(notificationKey);
+      
+      // Set a timeout to remove the notification from the set after 5 minutes
+      // to prevent the set from growing indefinitely
+      setTimeout(() => {
+        req.app.locals.sentNotifications.delete(notificationKey);
+      }, 5 * 60 * 1000);
+      
+      console.log("🔔 Socket notification sent for new order:", order._id);
+    } catch (error) {
+      console.error("❌ Error formatting notification data:", error);
     }
   } else {
     console.log("❌ Socket.io not available for notification");
@@ -200,7 +215,8 @@ exports.createCheckout = async (req, res) => {
     await notifyAdmin(order, req);
 
     // In confirmPayment function (around line 235)
-    await notifyAdmin(order, req);
+    // Remove this duplicate call
+    // await notifyAdmin(order, req);
 
     res.json({
       clientSecret: paymentIntent.client_secret,
@@ -284,15 +300,16 @@ exports.confirmPayment = async (req, res) => {
 
     await session.commitTransaction();
 
-    try {
-      // In confirmPayment function (if it calls notifyAdmin)
-      await notifyAdmin(order, req);
-    } catch (emailError) {
-      console.error(
-        "❌ Admin email failed, but payment processed:",
-        emailError
-      );
-    }
+    // Remove this call to prevent duplicate notifications
+    // try {
+    //   // In confirmPayment function (if it calls notifyAdmin)
+    //   await notifyAdmin(order, req);
+    // } catch (emailError) {
+    //   console.error(
+    //     "❌ Admin email failed, but payment processed:",
+    //     emailError
+    //   );
+    // }
 
     await sendUserEmail(
       req.user.email,
